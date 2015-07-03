@@ -1,4 +1,4 @@
-#tester
+
 
 
 from matplotlib import pylab as plt
@@ -11,8 +11,8 @@ from pymc.Matplot import plot as mcplot
 M = MCMC(dive_model)
 
 #M.use_step_method(pymc.AdaptiveMetropolis, [M.left_angle, M.right_angle, M.lag, M.dist],  delay=1000)
-M.sample(iter=200000, burn=10000, thin=100,verbose=0)
-#mcplot(M)
+M.sample(iter=2000, burn=100, thin=10,verbose=0)
+mcplot(M)
 #from pylab import hist, show
 
 #hist(M.trace('late_mean')[:])
@@ -38,9 +38,9 @@ d2=M.trace('right_angle')[:]
 #plt.xlim(0,6.28)
 #plt.show()
 
-bc = d1+0.5*d2
-plt.hist(d1)
-plt.xlim(0,6.28)
+bc = d1*180/3.142
+plt.hist(bc)
+plt.xlim(0,180)
 plt.show()
 
 plt.hist([M.trace('lag')[:]])
