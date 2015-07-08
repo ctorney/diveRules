@@ -16,7 +16,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['rates','dvector', 'intrinsic_rate', 'social_rate', 'na_rate', 'dist', 'lag', 'left_angle', 'right_angle']
+__all__ = ['rates','dvector','intrinsic_rate','social_rate','na_rate','dist','lag','blind_angle']
 
 
 
@@ -30,9 +30,8 @@ dist = Uniform('dist', lower=0, upper=2000)
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
 social_rate = Uniform('social_rate', lower=0, upper=1)
 na_rate = Uniform('na_rate', lower=0, upper=1)
-#left_angle = Beta('left_angle', alpha=4, beta=10)
-left_angle = Uniform('left_angle', lower=0, upper=0.5*pi)
-right_angle = Uniform('right_angle', lower=0, upper=pi)
+blind_angle = Uniform('blind_angle', lower=0, upper=pi)
+
 
 allDF = pd.DataFrame()
 for trial in np.arange(0,45):
@@ -48,6 +47,7 @@ allData = allDF.values
 
 dvector = np.copy(allData[:,5])
 dsize = len(dvector)
+
 # first find the maximum number of dives that any individual could observe
 maxDives=0
 for thisRow in range(dsize):
@@ -57,26 +57,38 @@ for thisRow in range(dsize):
         if len(window)>maxDives:
             maxDives=len(window)
 
+# build an array to store all observed dives and their time, distance and angle from the focal individual
 dparams = np.zeros((dsize,maxDives,3)).astype(np.float32) # time, dist, angle
 dparams[:,:,0]=maxLag + 1.0
 for thisRow in range(dsize):
     thisTime = allData[thisRow,0]        
+    thisIndex = allData[thisRow,1]        
     thisX = allData[thisRow,2]
     thisY = allData[thisRow,3]
     thisAngle = math.radians(allData[thisRow,4])
     thisTrial = allData[thisRow,8]
+    thisTrack = allData[(allData[:,8]==thisTrial)&(allData[:,1]==thisIndex),:]
     window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,8]==thisTrial)&(allData[:,5]==1),:]
     ncount = 0
+    
     for w in window:
         xj = w[2]
         yj = w[3]
-        tj = w[7]        
-        dparams[thisRow,ncount,0] = thisTime - tj
-        dparams[thisRow,ncount,1] = (((thisX-xj)**2+(thisY-yj)**2))**0.5
-        dx = xj - thisX
-        dy = yj - thisY
+        tj = w[0]
+        texj = w[7]
+        thatTime = thisTrack[(thisTrack[:,0]==tj),:]
+        if len(thatTime)!=1:
+            continue
+        oldX = thatTime[0,2]
+        oldY = thatTime[0,3]
+        oldAngle = math.radians(thatTime[0,4])
+                
+        dparams[thisRow,ncount,0] = thisTime - texj
+        dparams[thisRow,ncount,1] = (((oldX-xj)**2+(oldY-yj)**2))**0.5
+        dx = xj - oldX
+        dy = yj - oldY
         angle = math.atan2(dy,dx)
-        angle = angle - thisAngle
+        angle = angle - oldAngle
         dparams[thisRow,ncount,2] = math.atan2(math.sin(angle), math.cos(angle))
         ncount+=1
 
@@ -85,15 +97,10 @@ for thisRow in range(dsize):
 
     
 @deterministic(plot=False)
-def rates(T=lag,D=dist,d1=left_angle,d2=right_angle,i=intrinsic_rate,s=social_rate, na=na_rate):
-    #os.chdir("D:\\shags\\")
-    # 0 TIME # 1 DK # 2 XPOS # 3 YPOS # 4 ANGLE # 5 DIVE # 6 TRIAL
-    #dstop = d1 + d2
-    d3 = 3.142
+def rates(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate):
     svector=np.zeros_like(dvector) #social vector
     svector[allData[:,0]<T] = -1
-    svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d3)&(dparams[:,:,2]<d3),1)]=1
-    #svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&((dparams[:,:,2]<d1)|(dparams[:,:,2]>dstop)),1)]=1
+    svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
 
     out = np.ones_like(dvector).astype(float)*i 
     out[svector<0]=na
