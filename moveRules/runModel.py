@@ -4,14 +4,14 @@
 from matplotlib import pylab as plt
 
 
-import dive_model
+import move_model
 import pymc
 from pymc import MCMC
 from pymc.Matplot import plot as mcplot
-M = MCMC(dive_model)
+M = MCMC(move_model)
 
 #M.use_step_method(pymc.AdaptiveMetropolis, [M.left_angle, M.right_angle, M.lag, M.dist],  delay=1000)
-M.sample(iter=2000000, burn=1000, thin=100,verbose=0)
+M.sample(iter=20000, burn=100, thin=10,verbose=0)
 #mcplot(M)
 #from pylab import hist, show
 
@@ -23,33 +23,18 @@ M.sample(iter=2000000, burn=1000, thin=100,verbose=0)
 
 
 
-plt.hist([M.trace('intrinsic_rate')[:]],label='intrinsic')
-plt.hist([M.trace('social_rate')[:]],label='social')
+plt.hist([M.trace('blind_angle')[:]],label='ba')
 plt.legend(loc='upper left')
-plt.xlim(0,0.2)
+plt.xlim(0,4)
 plt.show()
 
-
-d1=M.trace('left_angle')[:]
-
-d2=M.trace('right_angle')[:]
-
-#plt.hist(d2)
-#plt.xlim(0,6.28)
-#plt.show()
-
-bc = 180*d1/3.142#+0.5*d2
-plt.hist(bc)
-plt.xlim(0,180)
-plt.show()
-
-plt.hist([M.trace('lag')[:]])
+plt.hist([M.trace('replen')[:]],label='alpha')
+plt.hist([M.trace('attlen')[:]],label='beta')
 plt.legend(loc='upper left')
-plt.xlim(0,5)
+plt.xlim(0,50)
 plt.show()
 
-plt.hist([M.trace('dist')[:]],100)
+plt.hist([M.trace('maxrho')[:]],label='beta')
 plt.legend(loc='upper left')
-plt.xlim(0,2000)
+plt.xlim(0,1)
 plt.show()
-
