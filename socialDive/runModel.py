@@ -35,7 +35,7 @@ plt.show()
 
 plt.hist([M.trace('dist')[:]],100)
 plt.legend(loc='upper left')
-plt.xlim(0,2000)
+plt.xlim(0,200)
 plt.show()
 
 

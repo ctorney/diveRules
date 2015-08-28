@@ -26,10 +26,11 @@ workDir = '/home/ctorney/workspace/diveRules/'
 maxLag = 5
 
 lag = Uniform('lag', lower=0, upper=maxLag)
-dist = Uniform('dist', lower=0, upper=2000)
+dist = Uniform('dist', lower=0, upper=200)
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
 social_rate = Uniform('social_rate', lower=0, upper=1)
 na_rate = Uniform('na_rate', lower=0, upper=1)
+#blind_angle = Uniform('blind_angle', lower=0, upper=pi)
 
 
 allDF = pd.DataFrame()
@@ -51,8 +52,8 @@ dsize = len(dvector)
 maxDives=0
 for thisRow in range(dsize):
         thisTime = allData[thisRow,0]        
-        thisTrial = allData[thisRow,8]
-        window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,8]==thisTrial)&(allData[:,5]==1),:]
+        thisTrial = allData[thisRow,9]
+        window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,9]==thisTrial)&(allData[:,5]==1),:]
         if len(window)>maxDives:
             maxDives=len(window)
 
@@ -65,9 +66,9 @@ for thisRow in range(dsize):
     thisX = allData[thisRow,2]
     thisY = allData[thisRow,3]
     thisAngle = math.radians(allData[thisRow,4])
-    thisTrial = allData[thisRow,8]
-    thisTrack = allData[(allData[:,8]==thisTrial)&(allData[:,1]==thisIndex),:]
-    window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,8]==thisTrial)&(allData[:,5]==1),:]
+    thisTrial = allData[thisRow,9]
+    thisTrack = allData[(allData[:,9]==thisTrial)&(allData[:,1]==thisIndex),:]
+    window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,9]==thisTrial)&(allData[:,5]==1),:]
     ncount = 0
     
     for w in window:
@@ -99,6 +100,7 @@ for thisRow in range(dsize):
 def rates(T=lag,D=dist,i=intrinsic_rate,s=social_rate, na=na_rate):
     svector=np.zeros_like(dvector) #social vector
     svector[allData[:,0]<T] = -1
+    #svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
     svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D),1)]=1
 
     out = np.ones_like(dvector).astype(float)*i 
