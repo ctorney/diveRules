@@ -23,6 +23,7 @@ M = MCMC(dive_model)
 
 
 #
+
 #plt.hist([M.trace('intrinsic_rate')[:]],label='intrinsic')
 #plt.legend(loc='upper left')
 #plt.xlim(0,0.2)

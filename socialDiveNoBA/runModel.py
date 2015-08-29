@@ -20,6 +20,18 @@ from pymc.Matplot import plot as mcplot
 #
 #
 #
+M = MCMC(dive_model)
+
+
+#M.sample(iter=12000, burn=500, thin=10,verbose=0)
+#mcplot(M)
+#from pylab import hist, show
+
+#hist(M.trace('late_mean')[:])
+#show()
+
+
+
 #
 #
 #
@@ -29,6 +41,7 @@ from pymc.Matplot import plot as mcplot
 #plt.xlim(0,0.2)
 #plt.show()
 
+#
 #
 #
 #plt.hist([M.trace('lag')[:]])
@@ -48,6 +61,7 @@ from pymc.Matplot import plot as mcplot
 #goodDives = allDives[allRates!=na]
 #
 #pymc.bernoulli_like(goodDives,goodRates)
+
 
 M2 = pymc.MAP(dive_model)
 M2.fit()
