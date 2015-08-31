@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 #os.chdir("D:\\shags\\")
 allData=np.zeros([0,7]) #dive vector
 for trial in np.arange(0,45):
-    folderpath=os.path.join (os.getcwd()+'/data3/',str(trial) )
+    folderpath=os.path.join (os.getcwd()+'/shags2/',str(trial) )
     fileimportname =  folderpath + '/tdata'+str(trial)+'.csv'
     if os.path.isfile(fileimportname):
         df3 = pd.read_csv(fileimportname, header=None)
