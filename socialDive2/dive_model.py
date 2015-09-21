@@ -27,11 +27,10 @@ maxLag = 5
 
 lag = Uniform('lag', lower=0, upper=maxLag)
 dist = Uniform('dist', lower=0, upper=200)
-#dist = Exponential('dist', beta=1.0/100)
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
 social_rate = Uniform('social_rate', lower=0, upper=1)
 na_rate = Uniform('na_rate', lower=0, upper=1)
-blind_angle = Uniform('blind_angle', lower=0, upper=0.5*pi)
+blind_angle = Uniform('blind_angle', lower=0, upper=pi)
 
 
 allDF = pd.DataFrame()
@@ -86,8 +85,6 @@ for thisRow in range(dsize):
                 
         dparams[thisRow,ncount,0] = thisTime - texj
         dparams[thisRow,ncount,1] = (((oldX-xj)**2+(oldY-yj)**2))**0.5
-        #if dparams[thisRow,ncount,1]>30:
-        #    dparams[thisRow,ncount,1]=dparams[thisRow,ncount,1]-15
         dx = xj - oldX
         dy = yj - oldY
         angle = math.atan2(dy,dx)
@@ -98,19 +95,16 @@ for thisRow in range(dsize):
 
 
 
+
+@stochastic(observed=True)
+def dives(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate, value=dvector):
     
-@deterministic(plot=False)
-def rates(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate):
     svector=np.zeros_like(dvector) #social vector
     svector[allData[:,0]<T] = -1
-    D2=250
     svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
 
-    out = np.ones_like(dvector).astype(float)*i 
-    out[svector<0]=na
-    out[svector>0]=s
+    asocdiv = dvector[svector==0]
+    socdiv = dvector[svector==1]
+    return (distributions.binomial_like(np.sum(socdiv,0).astype(int),len(socdiv),s) +  distributions.binomial_like(np.sum(asocdiv,0).astype(int),len(asocdiv),i))
+
     
-    return out
-
-dives = Bernoulli('dives', p=rates, value=dvector, observed=True)
-
