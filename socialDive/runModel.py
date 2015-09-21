@@ -43,3 +43,24 @@ M2 = MAP(dive_model)
 M2.fit()
 print(M2.AIC)
 print(M2.BIC)
+
+
+plt.hist([M.trace('intrinsic_rate')[:]],label='intrinsic')
+plt.hist([M.trace('social_rate')[:]],label='social')
+plt.legend(loc='upper left')
+plt.xlabel('dive rate')
+plt.ylabel('frequency')
+plt.xlim(0,0.2)
+plt.savefig('rates.png')
+
+
+
+plt.show()
+
+
+plt.hist([2*bc])
+#plt.legend(loc='upper left')
+plt.xlabel('visual angle')
+plt.ylabel('frequency')
+plt.xlim(0,180)
+plt.savefig('blind_angle.png')

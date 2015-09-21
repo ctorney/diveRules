@@ -30,7 +30,7 @@ dist = Uniform('dist', lower=0, upper=200)
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
 social_rate = Uniform('social_rate', lower=0, upper=1)
 na_rate = Uniform('na_rate', lower=0, upper=1)
-blind_angle = Uniform('blind_angle', lower=0, upper=pi)
+blind_angle = Uniform('blind_angle', lower=0, upper=0.5*pi)
 
 
 allDF = pd.DataFrame()
