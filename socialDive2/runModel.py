@@ -9,7 +9,7 @@ from pymc.Matplot import plot as mcplot
 M = MCMC(dive_model)
 
 
-M.sample(iter=12000, burn=500, thin=10,verbose=0)
+M.sample(iter=120000, burn=500, thin=10,verbose=0)
 mcplot(M)
 
 plt.hist([M.trace('intrinsic_rate')[:]],label='intrinsic')
@@ -25,7 +25,7 @@ d1=M.trace('blind_angle')[:]
 
 bc = d1*180/3.142
 plt.hist(bc)
-plt.xlim(0,180)
+plt.xlim(0,380)
 plt.show()
 
 plt.hist([M.trace('lag')[:]])

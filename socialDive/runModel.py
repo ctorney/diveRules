@@ -9,7 +9,7 @@ from pymc.Matplot import plot as mcplot
 M = MCMC(dive_model)
 
 
-M.sample(iter=12000, burn=500, thin=10,verbose=0)
+M.sample(iter=1200, burn=500, thin=10,verbose=0)
 ##mcplot(M)
 #
 #plt.hist([M.trace('intrinsic_rate')[:]],label='intrinsic')

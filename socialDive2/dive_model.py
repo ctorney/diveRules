@@ -16,7 +16,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['rates','dvector','intrinsic_rate','social_rate','na_rate','dist','lag','blind_angle']
+__all__ = ['dives','dvector','intrinsic_rate','social_rate','na_rate','dist','lag','blind_angle']
 
 
 
@@ -25,12 +25,15 @@ workDir = '/home/ctorney/workspace/diveRules/'
 
 maxLag = 5
 
-lag = Uniform('lag', lower=0, upper=maxLag)
-dist = Uniform('dist', lower=0, upper=200)
-intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
-social_rate = Uniform('social_rate', lower=0, upper=1)
-na_rate = Uniform('na_rate', lower=0, upper=1)
-blind_angle = Uniform('blind_angle', lower=0, upper=pi)
+lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.0)
+#dist = Uniform('dist', lower=0, upper=200,value=50)
+#dist=TruncatedNormal('dist',mu=50,tau=0.001,a=0,b=200)
+dist=TruncatedNormal('dist',mu=25,tau=1.0/(12.5**2),a=0,b=200)
+
+intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.08)
+social_rate = Uniform('social_rate', lower=0, upper=1,value=0.12)
+na_rate = Uniform('na_rate', lower=0, upper=1,value=0.12)
+blind_angle = Uniform('blind_angle', lower=0, upper=0.5*pi,value=0.95)
 
 
 allDF = pd.DataFrame()
@@ -98,13 +101,27 @@ for thisRow in range(dsize):
 
 @stochastic(observed=True)
 def dives(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate, value=dvector):
-    
-    svector=np.zeros_like(dvector) #social vector
-    svector[allData[:,0]<T] = -1
-    svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
+     def logp(value, T, D, d1,i,s,na):
+        
 
-    asocdiv = dvector[svector==0]
-    socdiv = dvector[svector==1]
-    return (distributions.binomial_like(np.sum(socdiv,0).astype(int),len(socdiv),s) +  distributions.binomial_like(np.sum(asocdiv,0).astype(int),len(asocdiv),i))
+        #T2=1.984
+        #D2=109.31
+        #d12=0.911
+        svector=np.zeros_like(value) #social vector
+        svector[allData[:,0]<T] = -1
+        svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
+
+        asocdiv = value[svector==0]
+        socdiv = value[svector==1]
+        nasocdiv = value[svector==-1]
+        #s=0.164
+        #i=0.08236
+        #na = 0.0177
+        #-18805.79
+    #    (1.0-i)**(1-asocdiv)*i**asocdiv
+        return (np.sum(np.log((1.0-i)**(1-asocdiv)*(i**asocdiv))) + np.sum(np.log((1.0-s)**(1-socdiv)*(s**socdiv)))  + np.sum(np.log((1.0-i)**(1-nasocdiv)*(i**nasocdiv))))
+
+        
+        #return (distributions.binomial_like(np.sum(socdiv,0).astype(int),len(socdiv),s) +  distributions.binomial_like(np.sum(asocdiv,0).astype(int),len(asocdiv),i))
 
     

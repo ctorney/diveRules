@@ -103,7 +103,7 @@ for thisRow in range(dsize):
 def rates(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate):
     svector=np.zeros_like(dvector) #social vector
     svector[allData[:,0]<T] = -1
-    D2=250
+    #D2=250
     svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
 
     out = np.ones_like(dvector).astype(float)*i 
