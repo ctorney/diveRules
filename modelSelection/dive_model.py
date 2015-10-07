@@ -16,19 +16,18 @@ import matplotlib.pyplot as plt
 __all__ = ['dives','dvector','intrinsic_rate','social_rate','dist','lag','blind_angle']
 
 
-
 workDir = '/home/ctorney/workspace/diveRules/'
 # Define data and stochastics
 
 maxLag = 5
 
-lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.0)
-dist = Uniform('dist', lower=0, upper=60,value=50)
+lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.04)
+dist = Uniform('dist', lower=0, upper=100,value= 54.719)
 #dist=TruncatedNormal('dist',mu=25,tau=1.0/(12.5**2),a=0,b=200)
 
-intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
-social_rate = Uniform('social_rate', lower=0, upper=1)
-blind_angle = Uniform('blind_angle', lower=0, upper=pi)
+intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.08)
+social_rate = Uniform('social_rate', lower=0, upper=1,value=0.1646)
+blind_angle = Uniform('blind_angle', lower=0, upper=pi,value=0.9547)
 
 
 allDF = pd.DataFrame()

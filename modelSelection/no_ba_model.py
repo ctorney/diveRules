@@ -25,10 +25,10 @@ workDir = '/home/ctorney/workspace/diveRules/'
 
 maxLag = 5
 
-lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.0)
-dist = Uniform('dist', lower=0, upper=60,value=50)
-intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
-social_rate = Uniform('social_rate', lower=0, upper=1)
+lag = Uniform('lag', lower=0.5, upper=maxLag,value=1.62)
+dist = Uniform('dist', lower=0, upper=100,value=42.87)
+intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.06134)
+social_rate = Uniform('social_rate', lower=0, upper=1,value=0.1414)
 
 
 

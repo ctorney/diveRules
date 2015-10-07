@@ -9,17 +9,21 @@ from pymc.Matplot import plot as mcplot
 
 
 MASOC = MAP(asocial_model)
-MASOC.fit(method ='fmin_powell', iterlim=1000, tol=.0001)
+MASOC.fit(method ='fmin_powell', iterlim=100000, tol=.000001)
 print(MASOC.AIC)
 print(MASOC.BIC)
 
 MNOBA = MAP(no_ba_model)
-MNOBA.fit(method ='fmin_powell', iterlim=1000, tol=.0001)
+MNOBA.fit(method ='fmin_powell', iterlim=100000, tol=.000001)
 print(MNOBA.AIC)
 print(MNOBA.BIC)
+print(MNOBA.dist.value)
+print(MNOBA.lag.value)
+print(MNOBA.intrinsic_rate.value)
+print(MNOBA.social_rate.value)
 
 MFULL = MAP(dive_model)
-MFULL.fit(method ='fmin_powell', iterlim=1000, tol=.0001)
+MFULL.fit(method ='fmin_powell', iterlim=100000, tol=.000001)
 print(MFULL.AIC)
 print(MFULL.BIC)
 print(MFULL.dist.value)

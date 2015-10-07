@@ -1,6 +1,7 @@
 
 from matplotlib import pylab as plt
 import dive_model
+#import noba_model
 import pymc
 from pymc import MCMC, MAP
 from pymc.Matplot import plot as mcplot
@@ -32,5 +33,7 @@ plt.hist([M.trace('dist')[:]],100)
 plt.legend(loc='upper left')
 plt.xlim(0,200)
 plt.show()
+
+
 
 

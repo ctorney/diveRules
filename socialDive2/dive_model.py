@@ -26,9 +26,9 @@ workDir = '/home/ctorney/workspace/diveRules/'
 maxLag = 5
 
 lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.0)
-#dist = Uniform('dist', lower=0, upper=200,value=50)
+dist = Uniform('dist', lower=0, upper=100)
 #dist=TruncatedNormal('dist',mu=50,tau=0.001,a=0,b=200)
-dist=TruncatedNormal('dist',mu=25,tau=1.0/(12.5**2),a=0,b=200)
+#dist=TruncatedNormal('dist',mu=40,tau=1.0/(40),a=0,b=80)
 
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.08)
 social_rate = Uniform('social_rate', lower=0, upper=1,value=0.12)
@@ -108,18 +108,19 @@ def dives(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, na=na_rate
         #D2=109.31
         #d12=0.911
         svector=np.zeros_like(value) #social vector
-        svector[allData[:,0]<T] = -1
+        #svector[allData[:,0]<T] = -1
+        
         svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
 
         asocdiv = value[svector==0]
         socdiv = value[svector==1]
-        nasocdiv = value[svector==-1]
+        #nasocdiv = value[svector==-1]
         #s=0.164
         #i=0.08236
         #na = 0.0177
         #-18805.79
     #    (1.0-i)**(1-asocdiv)*i**asocdiv
-        return (np.sum(np.log((1.0-i)**(1-asocdiv)*(i**asocdiv))) + np.sum(np.log((1.0-s)**(1-socdiv)*(s**socdiv)))  + np.sum(np.log((1.0-i)**(1-nasocdiv)*(i**nasocdiv))))
+        return (np.sum(np.log((1.0-i)**(1-asocdiv)*(i**asocdiv))) + np.sum(np.log((1.0-s)**(1-socdiv)*(s**socdiv))) )
 
         
         #return (distributions.binomial_like(np.sum(socdiv,0).astype(int),len(socdiv),s) +  distributions.binomial_like(np.sum(asocdiv,0).astype(int),len(asocdiv),i))
