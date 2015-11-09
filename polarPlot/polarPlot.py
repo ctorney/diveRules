@@ -93,7 +93,7 @@ for thisRow in range(dsize):
         
 binn2=9
 binn1=24
-maxr=75
+maxr=70
 
 theta2 = np.linspace(0.0,2.0 * np.pi, binn1+1)
 r2 = np.linspace(0, maxr, binn2+1)
