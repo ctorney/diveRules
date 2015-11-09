@@ -13,7 +13,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['dives','dvector','intrinsic_rate','social_rate','dist','lag','blind_angle']
+__all__ = ['dives','dvector','intrinsic_rate','social_rate','dist','lag']
 
 
 
@@ -24,11 +24,11 @@ maxLag = 5
 
 lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.0)
 dist = Uniform('dist', lower=0, upper=100,value=50)
-#dist=TruncatedNormal('dist',mu=40,tau=1.0/(40),a=0,b=200)
+
 
 intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1)
 social_rate = Uniform('social_rate', lower=0, upper=1)
-blind_angle = Uniform('blind_angle', lower=0, upper=pi)
+
 
 
 allDF = pd.DataFrame()
@@ -42,17 +42,6 @@ for trial in np.arange(0,45):
            
 allData = allDF.values
 
-for thisTrial in np.unique(allData[:,9]):
-    for thisIndex in np.unique(allData[:,1]):
-        window = allData[(allData[:,1]==thisIndex)&(allData[:,9]==thisTrial),:]
-        
-        x = window[:,2]
-        y = window[:,3]
-        angs = np.radians(window[:,4])
-        dx = x[1:]-x[0:-1]
-        dy = y[1:]-y[0:-1]
-        angs[0:-1] = np.arctan2(dy,dx)
-        allData[(allData[:,1]==thisIndex)&(allData[:,9]==thisTrial),4]=angs
 
 dvector = np.copy(allData[:,5])
 dsize = len(dvector)
@@ -74,10 +63,10 @@ for thisRow in range(dsize):
     thisIndex = allData[thisRow,1]        
     thisX = allData[thisRow,2]
     thisY = allData[thisRow,3]
-    thisAngle = (allData[thisRow,4])
+    thisAngle = math.radians(allData[thisRow,4])
     thisTrial = allData[thisRow,9]
     thisTrack = allData[(allData[:,9]==thisTrial)&(allData[:,1]==thisIndex),:]
-    window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]!=thisIndex)&(allData[:,0]<thisTime)&(allData[:,9]==thisTrial)&(allData[:,5]==1),:]
+    window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,9]==thisTrial)&(allData[:,5]==1),:]
     ncount = 0
     
     for w in window:
@@ -90,7 +79,7 @@ for thisRow in range(dsize):
             continue
         oldX = thatTime[0,2]
         oldY = thatTime[0,3]
-        oldAngle = (thatTime[0,4])
+        oldAngle = math.radians(thatTime[0,4])
                 
         dparams[thisRow,ncount,0] = thisTime - texj
         dparams[thisRow,ncount,1] = (((oldX-xj)**2+(oldY-yj)**2))**0.5
@@ -106,11 +95,11 @@ for thisRow in range(dsize):
 
 
 @stochastic(observed=True)
-def dives(T=lag,D=dist,d1=blind_angle,i=intrinsic_rate,s=social_rate, value=dvector):
-     def logp(value, T, D, d1, i, s):
+def dives(T=lag,D=dist,i=intrinsic_rate,s=social_rate, value=dvector):
+     def logp(value, T, D, i, s):
         
         svector=np.zeros_like(value) #social vector
-        svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D)&(dparams[:,:,2]>-d1)&(dparams[:,:,2]<d1),1)]=1
+        svector[np.any((dparams[:,:,0]<T)&(dparams[:,:,1]<D),1)]=1
 
         asocdiv = value[svector==0]
         socdiv = value[svector==1]
