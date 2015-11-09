@@ -20,12 +20,12 @@ workDir = '/home/ctorney/workspace/diveRules/'
 # Define data and stochastics
 
 maxLag = 5
-
-lag = Uniform('lag', lower=0.5, upper=maxLag,value=2.04)
-dist = Uniform('dist', lower=0, upper=100,value= 54.719)
-intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.08)
-social_rate = Uniform('social_rate', lower=0, upper=1,value=0.1646)
-blind_angle = Uniform('blind_angle', lower=0, upper=pi,value=0.9547)
+#start values from median of inference
+lag = Uniform('lag', lower=0.5, upper=maxLag,value=1.66)
+dist = Uniform('dist', lower=0, upper=100,value= 70)
+intrinsic_rate = Uniform('intrinsic_rate',lower=0, upper=1,value=0.06)
+social_rate = Uniform('social_rate', lower=0, upper=1,value=0.14)
+blind_angle = Uniform('blind_angle', lower=0, upper=pi,value=1.94)
 
 
 allDF = pd.DataFrame()
@@ -39,6 +39,18 @@ for trial in np.arange(0,45):
            
 allData = allDF.values
 
+
+for thisTrial in np.unique(allData[:,9]):
+    for thisIndex in np.unique(allData[:,1]):
+        window = allData[(allData[:,1]==thisIndex)&(allData[:,9]==thisTrial),:]
+        
+        x = window[:,2]
+        y = window[:,3]
+        angs = np.radians(window[:,4])
+        dx = x[1:]-x[0:-1]
+        dy = y[1:]-y[0:-1]
+        angs[0:-1] = np.arctan2(dy,dx)
+        allData[(allData[:,1]==thisIndex)&(allData[:,9]==thisTrial),4]=angs
 
 dvector = np.copy(allData[:,5])
 dsize = len(dvector)
@@ -60,7 +72,7 @@ for thisRow in range(dsize):
     thisIndex = allData[thisRow,1]        
     thisX = allData[thisRow,2]
     thisY = allData[thisRow,3]
-    thisAngle = math.radians(allData[thisRow,4])
+    thisAngle = (allData[thisRow,4])
     thisTrial = allData[thisRow,9]
     thisTrack = allData[(allData[:,9]==thisTrial)&(allData[:,1]==thisIndex),:]
     window = allData[(allData[:,0]>=thisTime-maxLag)&(allData[:,0]<thisTime)&(allData[:,9]==thisTrial)&(allData[:,5]==1),:]
@@ -76,7 +88,7 @@ for thisRow in range(dsize):
             continue
         oldX = thatTime[0,2]
         oldY = thatTime[0,3]
-        oldAngle = math.radians(thatTime[0,4])
+        oldAngle = (thatTime[0,4])
                 
         dparams[thisRow,ncount,0] = thisTime - texj
         dparams[thisRow,ncount,1] = (((oldX-xj)**2+(oldY-yj)**2))**0.5
