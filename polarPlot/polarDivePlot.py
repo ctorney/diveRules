@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
+
 import os
 import csv
 import numpy as np
 from datetime import datetime
-from pymc import *
 from numpy import array, empty
 from numpy.random import randint, rand
 import numpy as np
 from pymc.Matplot import plot as mcplot
 import matplotlib
+from matplotlib import transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
@@ -15,21 +17,8 @@ from scipy.stats import binned_statistic_2d
 import pandas as pd
 import math
 
-def convert_to_polar(x, y):
-    theta = np.arctan2(y, x)
-    r = np.sqrt(x**2 + y**2)
-    return theta, r 
-    
-def convert_from_polar(theta, r):
-    x=r*np.cos(theta)
-    y=r*np.sin(theta)
-    return x, y     
-
-
 
 workDir = '/home/ctorney/workspace/diveRules/'
-
-
 # open all the data files and import them
 allDF = pd.DataFrame()
 for trial in np.arange(0,45):
@@ -42,12 +31,10 @@ for trial in np.arange(0,45):
         
 # convert to a numpy array
 allData = allDF.values
-
 # calculate the headings based on the difference between the positions at successive time steps
 for thisTrial in np.unique(allData[:,9]):
     for thisIndex in np.unique(allData[:,1]):
         window = allData[(allData[:,1]==thisIndex)&(allData[:,9]==thisTrial),:]
-        
         x = window[:,2]
         y = window[:,3]
         angs = np.radians(window[:,4])
@@ -60,10 +47,10 @@ for thisTrial in np.unique(allData[:,9]):
 dvector = np.copy(allData[:,5])
 dsize = len(dvector)
 
+# time taken from Bayesian inference
 maxLag = 1.659979663079878
 
-
-# build an array to store the relative angles and distances to all neighbours
+# build an array to store the dives that resulted in another dive
 socialDiveLocations = np.zeros((0,2)).astype(np.float32) 
 for thisRow in range(dsize):
     thisTime = allData[thisRow,0]        
@@ -103,7 +90,7 @@ for thisRow in range(dsize):
     socialDiveLocations = np.vstack((socialDiveLocations,socRowLoc))
 
 
-# build an array to store the relative angles and distances to all neighbours
+# build an array to store all dives
 allDiveLocations = np.zeros((0,2)).astype(np.float32) 
 for thisRow in range(dsize):
     thisTime = allData[thisRow,0]        
@@ -139,119 +126,154 @@ for thisRow in range(dsize):
         
         allRowLoc = np.vstack((allRowLoc,[r, theta]))
     allDiveLocations = np.vstack((allDiveLocations,allRowLoc))
-    
+
+
+################################
+################################
+#### END OF DATA PROCESSING ####
+################################
+################################
+
+################################
+################################
+########### FIGURES ############
+################################
+################################
 
 ## POLAR PLOT OF ALL DIVES
 binn2=7
 binn1=24
 maxr=75
+size = 8
 
 theta2 = np.linspace(0.0,2.0 * np.pi, binn1+1)
 r2 = np.linspace(5, maxr, binn2+1)
 
 # wrap to [0, 2pi]
 allDiveLocations[allDiveLocations[:,1]<0,1] = allDiveLocations[allDiveLocations[:,1]<0,1] + 2 *pi
-
-hista1=np.histogram2d(x=allDiveLocations[:,0],y=allDiveLocations[:,1],bins=[r2,theta2],normed=0)[0]  
-
-#hista1[1:] =hista1[1:]/np.max(hista1[1:])
-#hista1 =hista1/np.max(hista1)
-
-size = 8
-# make a square figure
-#fig,axes = plt.subplots(1,1,figsize=(size, size),subplot_kw=dict(polar=True))
-fig1=plt.figure(figsize=(size, size))
-ax2=plt.subplot(projection="polar",frameon=False)
-im=ax2.pcolormesh(theta2,r2[0:],hista1[0:],lw=0.0,vmin=np.min(hista1),vmax=np.max(hista1),cmap='OrRd')
-ax2.yaxis.set_visible(False)
-
-#ax2.set_xticklabels(['0°(front)', '45°', '90°', '135°', '180°(back)', '225°', 
-                     #'270°', '315°'])
-
-ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', 
-               '135°', '', '225°','270°', '315°'],frac=1.1)
-
-ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', 
-                         label='twin', frame_on=False,
-                         theta_direction=ax2.get_theta_direction(),
-                         theta_offset=ax2.get_theta_offset())
-ax1.yaxis.set_visible(False)
-ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', 
-               '', '180°(back)', '','', ''],frac=1.15)
-
-xbin=np.linspace(-10,10,20)
-
-
-## POLAR PLOT OF SOCIAL DIVES
-
-
-# wrap to [0, 2pi]
-socialDiveLocations[socialDiveLocations[:,1]<0,1] = socialDiveLocations[socialDiveLocations[:,1]<0,1] + 2 *pi
-
-hista2=np.histogram2d(x=socialDiveLocations[:,0],y=socialDiveLocations[:,1],bins=[r2,theta2],normed=0)[0]  
-
-#hista2= hista2/np.max(hista2)
-#hista2[1:] =hista2[1:]/np.max(hista2[1:])
-
-#for hrow in range(hista2.shape[0]):
-#    hista2[hrow,:] = hista2[hrow,:]/np.max(hista2[hrow,:])
-    
-size = 8
-# make a square figure
-#fig,axes = plt.subplots(1,1,figsize=(size, size),subplot_kw=dict(polar=True))
-fig1=plt.figure(figsize=(size, size))
-ax2=plt.subplot(projection="polar",frameon=False)
-im=ax2.pcolormesh(theta2,r2[0:],hista2[0:],lw=0.0,vmin=np.min(hista2),vmax=np.max(hista2),cmap='OrRd')
-ax2.yaxis.set_visible(False)
-
-#ax2.set_xticklabels(['0°(front)', '45°', '90°', '135°', '180°(back)', '225°', 
-                     #'270°', '315°'])
-
-ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', 
-               '135°', '', '225°','270°', '315°'],frac=1.1)
-
-ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', 
-                         label='twin', frame_on=False,
-                         theta_direction=ax2.get_theta_direction(),
-                         theta_offset=ax2.get_theta_offset())
-ax1.yaxis.set_visible(False)
-ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', 
-               '', '180°(back)', '','', ''],frac=1.15)
-
-xbin=np.linspace(-10,10,20)
-
-
-
-
-
 hista1=np.histogram2d(x=allDiveLocations[:,0],y=allDiveLocations[:,1],bins=[r2,theta2],normed=0)[0]  
 
 
+
+fig1=plt.figure(figsize=(size, size))
+ax2=plt.subplot(projection="polar",frameon=False)
+im=ax2.pcolormesh(theta2,r2,hista1,lw=0.0,cmap='OrRd')
+ax2.yaxis.set_visible(False)
+
+
+ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', '135°', '', '225°','270°', '315°'],frac=1.1)
+
+ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', label='twin', frame_on=False,
+                         theta_direction=ax2.get_theta_direction(),
+                         theta_offset=ax2.get_theta_offset())
+ax1.yaxis.set_visible(False)
+ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', '', '180°(back)', '','', ''],frac=1.15)
+               
+m = plt.cm.ScalarMappable(cmap='OrRd')
+m.set_array(hista1)
+position=fig1.add_axes([1.1,0.12,0.04,0.8])
+cbar = plt.colorbar(m,cax=position)
+
+#cbar=plt.colorbar(im,ticks=[0,0.5, 1])#,cax=position) 
+cbar.set_label('Number of dives', rotation=90,fontsize='xx-large',labelpad=15)    
+
+
+axes=ax2
+factor = 1.0
+d = axes.get_yticks()[-1] * factor
+r_tick_labels = [0] + axes.get_yticks()
+r_tick_labels = r_tick_labels[:-1]
+r_ticks = (np.array(r_tick_labels) ** 2 + d ** 2) ** 0.5
+#r_ticks = r_ticks[:-1]
+theta_ticks = np.arcsin(d / r_ticks) + np.pi / 2
+r_axlabel = (np.mean(r_tick_labels) ** 2 + d ** 2) ** 0.5
+theta_axlabel = np.arcsin(d / r_axlabel) + np.pi / 2
+
+# fixed offsets in x
+offset_spine = transforms.ScaledTranslation(-100, 0, axes.transScale)
+offset_ticklabels = transforms.ScaledTranslation(-10, 0, axes.transScale)
+offset_axlabel = transforms.ScaledTranslation(-40, 0, axes.transScale)
+
+# apply these to the data coordinates of the line/ticks
+trans_spine = axes.transData + offset_spine
+trans_ticklabels = trans_spine + offset_ticklabels
+trans_axlabel = trans_spine + offset_axlabel
+
+# plot the 'spine'
+axes.plot(theta_ticks, r_ticks, '-_k', transform=trans_spine, clip_on=False)
+
+# plot the 'tick labels'
+for ii in xrange(len(r_ticks)):
+    axes.text(theta_ticks[ii], r_ticks[ii], "%.0f" % r_tick_labels[ii],
+                 ha="right", va="center", clip_on=False,
+                 transform=trans_ticklabels)
+
+# plot the 'axis label'
+axes.text(theta_axlabel, r_axlabel, 'bodylengths',rotation='vertical', fontsize='xx-large',
+             ha='right', va='center', clip_on=False, transform=trans_axlabel,
+             family='Trebuchet MS')
+            
+
+fig1.savefig("alldives.png",bbox_inches='tight',dpi=300)
+
+
+
+## POLAR PLOT OF SOCIAL DIVES FRACTION
+
+
+hista1=np.histogram2d(x=allDiveLocations[:,0],y=allDiveLocations[:,1],bins=[r2,theta2],normed=0)[0]  
 hista2=np.histogram2d(x=socialDiveLocations[:,0],y=socialDiveLocations[:,1],bins=[r2,theta2],normed=0)[0]  
+
 diff = hista2/hista1
-#for hrow in range(diff.shape[0]):
-#    diff[hrow,:] = diff[hrow,:]/np.max(diff[hrow,:])
-    
-size = 8
-# make a square figure
-#fig,axes = plt.subplots(1,1,figsize=(size, size),subplot_kw=dict(polar=True))
+
 fig1=plt.figure(figsize=(size, size))
 ax2=plt.subplot(projection="polar",frameon=False)
-im=ax2.pcolormesh(theta2,r2[0:],diff,lw=0.5,vmin=0.3,vmax=np.max(diff),cmap='OrRd')
+im=ax2.pcolormesh(theta2,r2[0:],diff,lw=0.5,vmin=0.3,vmax=0.4,cmap='OrRd')
 ax2.yaxis.set_visible(False)
+              
+m = plt.cm.ScalarMappable(cmap='OrRd')
+m.set_array(diff[:-1,:])
+position=fig1.add_axes([1.1,0.12,0.04,0.8])
+cbar = plt.colorbar(m,cax=position)#,ticks=[0.3,0.4])
+cbar.set_clim(0.3,0.4)
+#cbar=plt.colorbar(im,ticks=[0,0.5, 1])#,cax=position) 
+cbar.set_label('Fraction followed by dive', rotation=90,fontsize='xx-large',labelpad=15)    
 
-#ax2.set_xticklabels(['0°(front)', '45°', '90°', '135°', '180°(back)', '225°', 
-                     #'270°', '315°'])
 
-ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', 
-               '135°', '', '225°','270°', '315°'],frac=1.1)
+axes=ax2
+factor = 1.0
+d = axes.get_yticks()[-1] * factor
+r_tick_labels = [0] + axes.get_yticks()
+r_tick_labels = r_tick_labels[:-1]
+r_ticks = (np.array(r_tick_labels) ** 2 + d ** 2) ** 0.5
+#r_ticks = r_ticks[:-1]
+theta_ticks = np.arcsin(d / r_ticks) + np.pi / 2
+r_axlabel = (np.mean(r_tick_labels) ** 2 + d ** 2) ** 0.5
+theta_axlabel = np.arcsin(d / r_axlabel) + np.pi / 2
 
-ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', 
-                         label='twin', frame_on=False,
-                         theta_direction=ax2.get_theta_direction(),
-                         theta_offset=ax2.get_theta_offset())
-ax1.yaxis.set_visible(False)
-ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', 
-               '', '180°(back)', '','', ''],frac=1.15)
+# fixed offsets in x
+offset_spine = transforms.ScaledTranslation(-100, 0, axes.transScale)
+offset_ticklabels = transforms.ScaledTranslation(-10, 0, axes.transScale)
+offset_axlabel = transforms.ScaledTranslation(-40, 0, axes.transScale)
 
-xbin=np.linspace(-10,10,20)
+# apply these to the data coordinates of the line/ticks
+trans_spine = axes.transData + offset_spine
+trans_ticklabels = trans_spine + offset_ticklabels
+trans_axlabel = trans_spine + offset_axlabel
+
+# plot the 'spine'
+axes.plot(theta_ticks, r_ticks, '-_k', transform=trans_spine, clip_on=False)
+
+# plot the 'tick labels'
+for ii in xrange(len(r_ticks)):
+    axes.text(theta_ticks[ii], r_ticks[ii], "%.0f" % r_tick_labels[ii],
+                 ha="right", va="center", clip_on=False,
+                 transform=trans_ticklabels)
+
+# plot the 'axis label'
+axes.text(theta_axlabel, r_axlabel, 'bodylengths',rotation='vertical', fontsize='xx-large',
+             ha='right', va='center', clip_on=False, transform=trans_axlabel,
+             family='Trebuchet MS')
+
+fig1.savefig("socialdives.png",dpi=300)
+            
