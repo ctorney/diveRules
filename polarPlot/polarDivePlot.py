@@ -214,7 +214,7 @@ axes.text(theta_axlabel, r_axlabel, 'bodylengths',rotation='vertical', fontsize=
              family='Trebuchet MS')
             
 
-fig1.savefig("alldives.png",bbox_inches='tight',dpi=300)
+fig1.savefig("alldives.png",bbox_inches='tight',dpi=100)
 
 
 
@@ -230,11 +230,19 @@ fig1=plt.figure(figsize=(size, size))
 ax2=plt.subplot(projection="polar",frameon=False)
 im=ax2.pcolormesh(theta2,r2[0:],diff,lw=0.5,vmin=0.3,vmax=0.4,cmap='OrRd')
 ax2.yaxis.set_visible(False)
+
+ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', '135°', '', '225°','270°', '315°'],frac=1.1)
+
+ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', label='twin', frame_on=False,
+                         theta_direction=ax2.get_theta_direction(),
+                         theta_offset=ax2.get_theta_offset())
+ax1.yaxis.set_visible(False)
+ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', '', '180°(back)', '','', ''],frac=1.15)
               
 m = plt.cm.ScalarMappable(cmap='OrRd')
 m.set_array(diff[:-1,:])
 position=fig1.add_axes([1.1,0.12,0.04,0.8])
-cbar = plt.colorbar(m,cax=position)#,ticks=[0.3,0.4])
+cbar = plt.colorbar(m,cax=position,ticks=[0.3,0.32,0.34,0.36,0.38,0.4])
 cbar.set_clim(0.3,0.4)
 #cbar=plt.colorbar(im,ticks=[0,0.5, 1])#,cax=position) 
 cbar.set_label('Fraction followed by dive', rotation=90,fontsize='xx-large',labelpad=15)    
@@ -275,5 +283,5 @@ axes.text(theta_axlabel, r_axlabel, 'bodylengths',rotation='vertical', fontsize=
              ha='right', va='center', clip_on=False, transform=trans_axlabel,
              family='Trebuchet MS')
 
-fig1.savefig("socialdives.png",dpi=300)
+fig1.savefig("socialdives.png",bbox_inches='tight',dpi=100)
             
