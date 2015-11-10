@@ -11,6 +11,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from scipy.stats import binned_statistic_2d
 import pandas as pd
 import math
 
@@ -90,29 +91,28 @@ for thisRow in range(dsize):
         rowLoc = np.vstack((rowLoc,[r, theta, jHeading]))
     locations = np.vstack((locations,rowLoc))
 
-        
-binn2=9
+
+## POLAR PLOT OF RELATIVE POSITIONS
+binn2=7
 binn1=24
-maxr=70
+maxr=75
 
 theta2 = np.linspace(0.0,2.0 * np.pi, binn1+1)
-r2 = np.linspace(0, maxr, binn2+1)
+r2 = np.linspace(5, maxr, binn2+1)
 
 # wrap to [0, 2pi]
 locations[locations[:,1]<0,1] = locations[locations[:,1]<0,1] + 2 *pi
 
 hista2=np.histogram2d(x=locations[:,0],y=locations[:,1],bins=[r2,theta2],normed=0)[0]  
 
-
-
-hista2 =hista2/np.max(hista2)
+#hista2 =hista2/np.max(hista2)
 
 size = 8
 # make a square figure
 #fig,axes = plt.subplots(1,1,figsize=(size, size),subplot_kw=dict(polar=True))
 fig1=plt.figure(figsize=(size, size))
 ax2=plt.subplot(projection="polar",frameon=False)
-im=ax2.pcolormesh(theta2,r2,hista2,lw=0.0,vmin=0,vmax=1.0)
+im=ax2.pcolormesh(theta2,r2,hista2,lw=0.0,vmin=np.min(hista2),vmax=np.max(hista2),cmap='OrRd')
 ax2.yaxis.set_visible(False)
 
 #ax2.set_xticklabels(['0°(front)', '45°', '90°', '135°', '180°(back)', '225°', 
@@ -130,3 +130,52 @@ ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '',
                '', '180°(back)', '','', ''],frac=1.15)
 
 xbin=np.linspace(-10,10,20)
+
+
+## POLAR PLOT OF RELATIVE HEADINGS
+
+
+
+# wrap to [0, 2pi]
+locations[locations[:,1]<0,1] = locations[locations[:,1]<0,1] + 2 *pi
+
+cosRelativeAngles = np.cos(locations[:,2])
+sinRelativeAngles = np.sin(locations[:,2])
+
+# find the average cos and sin of the relative headings to calculate circular statistics
+histcos=binned_statistic_2d(x=locations[:,0],y=locations[:,1],values=cosRelativeAngles, statistic='mean', bins=[r2,theta2])[0]  
+histsin=binned_statistic_2d(x=locations[:,0],y=locations[:,1],values=sinRelativeAngles, statistic='mean', bins=[r2,theta2])[0]  
+
+# mean is atan and std dev is 1-R
+relativeAngles = np.arctan2(histsin,histcos)
+stdRelativeAngles = np.sqrt( 1 - np.sqrt(histcos**2+histsin**2))
+
+
+size = 8
+# make a square figure
+#fig,axes = plt.subplots(1,1,figsize=(size, size),subplot_kw=dict(polar=True))
+fig1=plt.figure(figsize=(size, size))
+ax2=plt.subplot(projection="polar",frameon=False)
+
+
+im=ax2.pcolormesh(theta2,r2,stdRelativeAngles,lw=0.0,vmin=np.min(stdRelativeAngles),vmax=np.max(stdRelativeAngles),cmap='OrRd')
+im=ax2.quiver(theta2[0:-1]+(pi/binn1),r2[1:-1]+(0.5*maxr/binn2),np.cos(relativeAngles[1:,:]),np.sin(relativeAngles[1:,:]),pivot='mid')
+#im=ax2.pcolormesh(theta2,r2,np.cos(relativeAngles),np.sin(relativeAngles),lw=0.0,vmin=-0.5,vmax=0.5)
+ax2.yaxis.set_visible(False)
+
+#ax2.set_xticklabels(['0°(front)', '45°', '90°', '135°', '180°(back)', '225°', 
+                     #'270°', '315°'])
+
+ax2.set_thetagrids(angles=np.arange(0,360,45),labels=['', '45°', '90°', 
+               '135°', '', '225°','270°', '315°'],frac=1.1)
+
+ax1 = ax2.figure.add_axes(ax2.get_position(), projection='polar', 
+                         label='twin', frame_on=False,
+                         theta_direction=ax2.get_theta_direction(),
+                         theta_offset=ax2.get_theta_offset())
+ax1.yaxis.set_visible(False)
+ax1.set_thetagrids(angles=np.arange(0,360,45),labels=['0°(front)', '', '', 
+               '', '180°(back)', '','', ''],frac=1.15)
+
+xbin=np.linspace(-10,10,20)
+
